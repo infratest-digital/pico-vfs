@@ -193,6 +193,14 @@ int fs_info(const char *path, filesystem_t **fs, blockdevice_t **device) {
     return _error_remap(0);
 }
 
+ssize_t fs_size(filesystem_t *fs) {
+    if (!fs->fs_size) {
+        return _error_remap(-EIO);
+    }
+
+    return _error_remap(fs->fs_size(fs));
+}
+
 int _unlink(const char *path) {
     auto_init_recursive_mutex(_mutex);
     recursive_mutex_enter_blocking(&_mutex);

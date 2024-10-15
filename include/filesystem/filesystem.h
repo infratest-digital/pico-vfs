@@ -91,6 +91,8 @@ typedef struct filesystem {
     int (*dir_open)(struct filesystem *fs, fs_dir_t *dir, const char *path);
     int (*dir_close)(struct filesystem *fs, fs_dir_t *dir);
     int (*dir_read)(struct filesystem *fs, fs_dir_t *dir, struct dirent *ent);
+
+    ssize_t (*fs_size)(struct filesystem *fs);
 } filesystem_t;
 
 #ifdef __cplusplus

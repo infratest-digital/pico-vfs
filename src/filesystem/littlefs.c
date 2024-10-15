@@ -418,6 +418,16 @@ static int dir_read(filesystem_t *fs, fs_dir_t *dir, struct dirent *ent) {
     return _error_remap(res);
 }
 
+static ssize_t fs_size(filesystem_t *fs) {
+    filesystem_littlefs_context_t *context = fs->context;
+
+    mutex_enter_blocking(&context->_mutex);
+    lfs_ssize_t res = lfs_fs_size(&context->littlefs);
+    mutex_exit(&context->_mutex);
+
+    return _error_remap(res);
+}
+
 filesystem_t *filesystem_littlefs_create(uint32_t block_cycles,
                                          lfs_size_t lookahead_size)
 {
@@ -449,6 +459,7 @@ filesystem_t *filesystem_littlefs_create(uint32_t block_cycles,
     fs->dir_open = dir_open;
     fs->dir_close = dir_close;
     fs->dir_read = dir_read;
+    fs->fs_size = fs_size;
 
     filesystem_littlefs_context_t *context = calloc(1, sizeof(filesystem_littlefs_context_t));
     if (context == NULL) {

@@ -88,6 +88,15 @@ int fs_reformat(const char *path);
  */
 int fs_info(const char *path, filesystem_t **fs, blockdevice_t **device);
 
+/*! \brief Get filesystem size
+ * \ingroup filesystem
+ *
+ * \param fs Pointer references to filesystem objects
+ * \retval size in bytes
+ * \retval -1 Lookup failed. Error codes are indicated by errno.
+ */
+ssize_t fs_size(filesystem_t *fs);
+
 /*! \brief File system error message
  * \ingroup filesystem
  *
