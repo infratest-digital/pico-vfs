@@ -10,6 +10,9 @@
 #include "blockdevice/blockdevice.h"
 #include "filesystem/littlefs.h"
 
+#include "FreeRTOS.h"
+#include "task.h"
+#include "semphr.h"
 
 typedef struct {
    lfs_file_t file;
@@ -121,6 +124,26 @@ static int littlefs_sync(const struct lfs_config *c) {
     return device->sync(device);
 }
 
+static SemaphoreHandle_t lfs_lock = NULL;
+
+static int littlefs_freertos_lock(const struct lfs_config *c)
+{
+    if (!lfs_lock)
+        lfs_lock = xSemaphoreCreateMutex();
+
+    xSemaphoreTake(lfs_lock, portMAX_DELAY);
+
+    return 0;
+}
+
+static int littlefs_freertos_unlock(const struct lfs_config *c)
+{
+    if (lfs_lock)
+        xSemaphoreGive(lfs_lock);
+
+    return 0;
+}
+
 static void _init_config(struct lfs_config *config, blockdevice_t *device) {
     int32_t block_cycles = config->block_cycles;
     lfs_size_t lookahead_size = config->lookahead_size;
@@ -132,6 +155,10 @@ static void _init_config(struct lfs_config *config, blockdevice_t *device) {
     config->prog = littlefs_program;
     config->erase = littlefs_erase;
     config->sync = littlefs_sync;
+#ifdef LFS_THREADSAFE
+    config->lock = littlefs_freertos_lock;
+    config->unlock = littlefs_freertos_unlock;
+#endif
     config->read_size = device->read_size;
     config->prog_size = device->program_size;
     config->block_size = device->erase_size;

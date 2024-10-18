@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.13...3.27)
 
 include(vendor/pico_sdk_import.cmake)
 include(pico_vfs.cmake)
-set(FAMILY rp2040)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
@@ -94,10 +93,16 @@ target_sources(filesystem_littlefs INTERFACE
   vendor/littlefs/lfs_util.c
 )
 target_include_directories(filesystem_littlefs INTERFACE vendor/littlefs)
-target_compile_options(filesystem_littlefs INTERFACE -DLFS_NO_DEBUG -Wno-unused-function -Wno-null-dereference)
+target_compile_options(filesystem_littlefs INTERFACE
+  -DLFS_NO_DEBUG
+  -DLFS_THREADSAFE
+  -Wno-unused-function
+  -Wno-null-dereference
+)
 target_link_libraries(filesystem_littlefs INTERFACE
   filesystem
   pico_sync
+  FreeRTOS-Kernel-Heap4
 )
 
 
