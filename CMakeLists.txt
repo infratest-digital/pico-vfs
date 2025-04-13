@@ -67,7 +67,6 @@ target_sources(blockdevice_loopback INTERFACE
 target_link_libraries(blockdevice_loopback INTERFACE
   blockdevice
   pico_sync
-  filesystem_vfs
 )
 
 
