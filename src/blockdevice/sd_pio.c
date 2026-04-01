@@ -46,7 +46,7 @@ typedef struct {
 
 #define SD_COMMAND_TIMEOUT                CONF_SD_CMD_TIMEOUT
 #define SD_CMD0_GO_IDLE_STATE_RETRIES     CONF_SD_CMD0_IDLE_STATE_RETRIES
-#define SD_DBG                                   1      /*!< 1 - Enable debugging */
+#define SD_DBG                                   0      /*!< 1 - Enable debugging */
 
 #define SD_BLOCK_DEVICE_ERROR_WOULD_BLOCK        -5001  /*!< operation would block */
 #define SD_BLOCK_DEVICE_ERROR_UNSUPPORTED        -5002  /*!< unsupported operation */
@@ -531,14 +531,12 @@ static int init_card(void *_config) {
     int32_t status = BD_ERROR_OK;
     uint32_t response, arg;
 
-    printf("spi_init\n");
     _spi_init(config);
     if (_go_idle_state(config) != R1_IDLE_STATE) {
         debug_if(SD_DBG, "No disk, or could not put SD card in to SPI idle state\n");
         return SD_BLOCK_DEVICE_ERROR_NO_DEVICE;
     }
 
-    printf("cmd8\n");
     // Send CMD8, if the card rejects the command then it's probably using the
     // legacy protocol, or is a MMC, or just flat-out broken
     status = _cmd8(config);
@@ -546,12 +544,10 @@ static int init_card(void *_config) {
         return status;
     }
 
-    printf("cdc, maybe?\n");
     if (config->enable_crc) {
         status = _cmd(config, CMD59_CRC_ON_OFF, config->enable_crc, 0, NULL);
     }
 
-    printf("ocr\n");
     // Read OCR - CMD58 Response contains OCR register
     if (BD_ERROR_OK != (status = _cmd(config, CMD58_READ_OCR, 0x0, 0x0, &response))) {
         return status;
@@ -575,13 +571,11 @@ static int init_card(void *_config) {
      * "0" indicates completion of initialization. The host repeatedly issues ACMD41 until
      * this bit is set to "0".
      */
-    printf("idle stuffa cheack idk\n");
     absolute_time_t timeout = make_timeout_time_ms(SD_COMMAND_TIMEOUT);
     do {
         status = _cmd(config, ACMD41_SD_SEND_OP_COND, arg, 1, &response);
     } while ((response & R1_IDLE_STATE) && (0 < absolute_time_diff_us(get_absolute_time(), timeout)));
 
-    printf("check completion\n");
     // Initialization complete: ACMD41 successful
     if ((BD_ERROR_OK != status) || (0x00 != response)) {
         config->card_type = CARD_UNKNOWN;
@@ -589,7 +583,6 @@ static int init_card(void *_config) {
         return status;
     }
 
-    printf("deal with card type\n");
     if (SDCARD_V2 == config->card_type) {
         // Get the card capacity CCS: CMD58
         if (BD_ERROR_OK == (status = _cmd(config, CMD58_READ_OCR, 0x0, 0x0, &response))) {
@@ -606,7 +599,6 @@ static int init_card(void *_config) {
         debug_if(SD_DBG, "Card Initialized: Version 1.x Card\n");
     }
 
-    printf("other crc shit\n");
     if (!config->enable_crc) {
         // Disable CRC
         status = _cmd(config, CMD59_CRC_ON_OFF, config->enable_crc, 0x0, &response);
