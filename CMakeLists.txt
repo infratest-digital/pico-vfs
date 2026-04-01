@@ -24,6 +24,20 @@ target_link_libraries(blockdevice_sd INTERFACE
   pico_sync
 )
 
+# SD Card over PIO blockdevice library
+add_library(blockdevice_sd_pio INTERFACE)
+target_sources(blockdevice_sd_pio INTERFACE
+  src/blockdevice/sd_pio.c
+  src/blockdevice/pio_spi.c
+)
+pico_generate_pio_header(blockdevice_sd_pio ${CMAKE_CURRENT_LIST_DIR}/src/blockdevice/spi.pio)
+target_compile_options(blockdevice_sd_pio INTERFACE)
+target_link_libraries(blockdevice_sd_pio INTERFACE
+  blockdevice
+  hardware_pio
+  pico_sync
+)
+
 # Onboard-Flash blockdevice library
 add_library(blockdevice_flash INTERFACE)
 target_sources(blockdevice_flash INTERFACE
